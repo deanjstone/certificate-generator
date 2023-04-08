@@ -1,20 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Unique Number Generator</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>Australian VET Certificate Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.2/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.2/vfs_fonts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.15.6/xlsx.full.min.js"></script>
+    <script src="app.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+
+      form {
+        margin: 20px;
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      button {
+        padding: 10px;
+        font-size: 16px;
+        background-color: #4caf50;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+      }
+    </style>
   </head>
   <body>
-    <div class="container">
-      <h1>Unique Number Generator</h1>
-      <label for="seed">Enter a 7-digit number starting with 8:</label>
-      <input type="number" id="seed" min="8000000" max="8999999" required />
-      <button id="generate-btn">Generate</button>
-      <div class="output-container">
-        <label for="output">Generated Number:</label>
-        <input type="text" id="output" readonly />
-      </div>
-    </div>
-    <script src="script.js"></script>
+    <h1>Australian VET Certificate Generator</h1>
+    <form id="form">
+      <label for="file">Select an xlsx file:</label>
+      <input type="file" id="file" name="file" />
+      <button type="button" onclick="generateCertificate()">
+        Generate Certificate
+      </button>
+    </form>
   </body>
 </html>
