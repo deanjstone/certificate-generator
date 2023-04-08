@@ -12,8 +12,8 @@ function generateCertificate() {
     var units = [];
 
     for (var i = 2; i <= 11; i++) {
-      var code = worksheet["A" + i].v;
-      var title = worksheet["B" + i].v;
+      var code = worksheet["A" + i];
+      var title = worksheet["B" + i];
       units.push({ code: code, title: title });
     }
 
@@ -23,11 +23,11 @@ function generateCertificate() {
       },
 
       content: [
-        {
+/*         {
           image: "background.jpg",
           absolutePosition: { x: 0, y: 0 },
           width: 595,
-        },
+        }, */
         {
           text: "CERTIFICATE IV IN TRAINING AND ASSESSMENT",
           fontSize: 24,
@@ -60,13 +60,13 @@ function generateCertificate() {
             ];
           }),
         },
-        { pageBreak: "after" },
         {
           text: "CERTIFICATE DETAILS",
           fontSize: 24,
           bold: true,
           margin: [0, 100, 0, 20],
           alignment: "center",
+          pageBreak: "before",
         },
         { text: "Qualification:", fontSize: 16, margin: [0, 0, 0, 10] },
         {
