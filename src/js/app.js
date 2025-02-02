@@ -1,33 +1,60 @@
-function generateCertificate() {
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("form");
   const fileInput = document.getElementById("file");
-  const file = fileInput.files[0];
+  const loadingIndicator = document.getElementById("loading-indicator");
 
-  if (!file) {
-    alert("Please select a file.");
-    return;
-  }
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    generateCertificate();
+  });
 
-  const reader = new FileReader();
+  // Function to generate the certificate
+  const generateCertificate = () => {
+    const file = fileInput.files[0];
 
-  reader.onload = (event) => {
-    const data = new Uint8Array(event.target.result);
-    const workbook = XLSX.read(data, { type: "array" });
-    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const name = worksheet["A1"].v;
-    const date = new Date().toLocaleDateString();
-    const units = [];
-
-    for (let i = 2; i <= 11; i++) {
-      const code = worksheet["A" + i];
-      const title = worksheet["B" + i];
-      units.push({ code: code, title: title });
+    if (!file) {
+      alert("Please select a file.");
+      return;
     }
 
-    const docDefinition = {
+    loadingIndicator.style.display = "block";
+
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      const data = new Uint8Array(event.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const name = worksheet["A1"].v;
+      const date = new Date().toLocaleDateString();
+      const units = [];
+
+      for (let i = 2; i <= 11; i++) {
+        const code = worksheet["A" + i];
+        const title = worksheet["B" + i];
+        units.push({ code: code, title: title });
+      }
+
+      const docDefinition = createDocDefinition(name, date, units);
+
+      pdfMake.createPdf(docDefinition).download("Certificate.pdf");
+      loadingIndicator.style.display = "none";
+    };
+
+    reader.onerror = () => {
+      alert("Error reading file. Please try again.");
+      loadingIndicator.style.display = "none";
+    };
+
+    reader.readAsArrayBuffer(file);
+  };
+
+  // Function to create the document definition for the PDF
+  const createDocDefinition = (name, date, units) => {
+    return {
       security: {
         permissions: "print",
       },
-
       content: [
         {
           text: "CERTIFICATE IV IN TRAINING AND ASSESSMENT",
@@ -82,9 +109,5 @@ function generateCertificate() {
         },
       ],
     };
-
-    pdfMake.createPdf(docDefinition).download("Certificate.pdf");
   };
-
-  reader.readAsArrayBuffer(file);
-}
+});
