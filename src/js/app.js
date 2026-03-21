@@ -60,7 +60,13 @@ function createDocDefinition(name, date, units) {
 }
 
 function parseWorksheet(worksheet) {
-  const name = worksheet?.A1?.v;
+  const rawName = worksheet?.A1?.v;
+  const name = typeof rawName === "string" ? rawName.trim() : rawName;
+
+  if (!name) {
+    throw new Error("Missing required learner name in cell A1.");
+  }
+
   const units = [];
 
   for (let i = 2; i <= 11; i += 1) {
@@ -112,7 +118,11 @@ function generateCertificate({
       pdfMaker.createPdf(docDefinition).download("Certificate.pdf");
       onLoaded();
     } catch (error) {
-      onError("Error reading file. Please try again.");
+      if (error?.message === "Missing required learner name in cell A1.") {
+        onError("Missing required learner name in cell A1.");
+      } else {
+        onError("Error reading file. Please try again.");
+      }
       onLoaded();
     }
   };

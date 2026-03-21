@@ -101,6 +101,48 @@ test('parseWorksheet maps workbook values into name and units', () => {
   });
 });
 
+test('parseWorksheet throws for missing learner name in A1', () => {
+  assert.throws(
+    () => parseWorksheet({ A2: { v: 'UNIT1' }, B2: { v: 'Unit 1 Title' } }),
+    /Missing required learner name in cell A1/,
+  );
+});
+
+test('generateCertificate shows a user-facing error when A1 is missing', () => {
+  const file = new File([''], 'test.xlsx', {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  const alerts = [];
+  global.alert = (message) => alerts.push(message);
+
+  generateCertificate({
+    file,
+    fileReaderFactory: () => ({
+      readAsArrayBuffer() {
+        this.onload({ target: { result: new ArrayBuffer(8) } });
+      },
+    }),
+    xlsx: {
+      read: () => ({
+        SheetNames: ['Sheet1'],
+        Sheets: {
+          Sheet1: {
+            A2: { v: 'UNIT1' },
+            B2: { v: 'Unit 1 Title' },
+          },
+        },
+      }),
+    },
+    pdfMaker: {
+      createPdf: () => ({
+        download: () => {},
+      }),
+    },
+  });
+
+  assert.deepEqual(alerts, ['Missing required learner name in cell A1.']);
+});
+
 test('createDocDefinition builds expected structure', () => {
   const name = 'John Doe';
   const date = '01/01/2022';
