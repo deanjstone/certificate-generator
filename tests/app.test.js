@@ -1,67 +1,94 @@
-const { generateCertificate, createDocDefinition } = require('../src/js/app');
-const fs = require('fs');
-const path = require('path');
-const XLSX = require('xlsx');
+const { generateCertificate, createDocDefinition, parseWorksheet } = require('../src/js/app');
 
 describe('generateCertificate', () => {
-  let fileInput;
-  let loadingIndicator;
-
-  beforeEach(() => {
-    document.body.innerHTML = `
-      <form id="form">
-        <input type="file" id="file" />
-        <div id="loading-indicator" style="display: none;"></div>
-      </form>
-    `;
-    fileInput = document.getElementById('file');
-    loadingIndicator = document.getElementById('loading-indicator');
-  });
-
   it('should display an alert if no file is selected', () => {
     const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
+
     generateCertificate();
+
     expect(alertMock).toHaveBeenCalledWith('Please select a file.');
     alertMock.mockRestore();
   });
 
-  it('should display a loading indicator while generating the certificate', (done) => {
-    const file = new File([''], 'test.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    fileInput.files = [file];
+  it('should call loading callbacks while generating the certificate', () => {
+    const file = new File([''], 'test.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    const onLoading = jest.fn();
+    const onLoaded = jest.fn();
+    const downloadMock = jest.fn();
 
-    const readerMock = jest.spyOn(FileReader.prototype, 'readAsArrayBuffer').mockImplementation(function() {
-      this.onload({ target: { result: new ArrayBuffer(8) } });
+    generateCertificate({
+      file,
+      onLoading,
+      onLoaded,
+      fileReaderFactory: () => ({
+        readAsArrayBuffer() {
+          this.onload({ target: { result: new ArrayBuffer(8) } });
+        },
+      }),
+      xlsx: {
+        read: () => ({
+          SheetNames: ['Sheet1'],
+          Sheets: {
+            Sheet1: {
+              A1: { v: 'John Doe' },
+            },
+          },
+        }),
+      },
+      pdfMaker: {
+        createPdf: () => ({
+          download: downloadMock,
+        }),
+      },
     });
 
-    generateCertificate();
-
-    expect(loadingIndicator.style.display).toBe('block');
-
-    setTimeout(() => {
-      expect(loadingIndicator.style.display).toBe('none');
-      readerMock.mockRestore();
-      done();
-    }, 100);
+    expect(onLoading).toHaveBeenCalledTimes(1);
+    expect(onLoaded).toHaveBeenCalledTimes(1);
+    expect(downloadMock).toHaveBeenCalledWith('Certificate.pdf');
   });
 
-  it('should display an alert if there is an error reading the file', (done) => {
-    const file = new File([''], 'test.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    fileInput.files = [file];
-
-    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
-    const readerMock = jest.spyOn(FileReader.prototype, 'readAsArrayBuffer').mockImplementation(function() {
-      this.onerror();
+  it('should display an alert if there is an error reading the file', () => {
+    const file = new File([''], 'test.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     });
 
-    generateCertificate();
+    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
 
-    setTimeout(() => {
-      expect(alertMock).toHaveBeenCalledWith('Error reading file. Please try again.');
-      expect(loadingIndicator.style.display).toBe('none');
-      alertMock.mockRestore();
-      readerMock.mockRestore();
-      done();
-    }, 100);
+    generateCertificate({
+      file,
+      fileReaderFactory: () => ({
+        readAsArrayBuffer() {
+          this.onerror();
+        },
+      }),
+    });
+
+    expect(alertMock).toHaveBeenCalledWith('Error reading file. Please try again.');
+    alertMock.mockRestore();
+  });
+});
+
+describe('parseWorksheet', () => {
+  it('should map workbook values into a name and units array', () => {
+    const worksheet = {
+      A1: { v: 'John Doe' },
+      A2: { v: 'UNIT1' },
+      B2: { v: 'Unit 1 Title' },
+      A3: { v: 'UNIT2' },
+      B3: { v: 'Unit 2 Title' },
+    };
+
+    const parsed = parseWorksheet(worksheet);
+
+    expect(parsed).toEqual({
+      name: 'John Doe',
+      units: [
+        { code: 'UNIT1', title: 'Unit 1 Title' },
+        { code: 'UNIT2', title: 'Unit 2 Title' },
+      ],
+    });
   });
 });
 
