@@ -5,6 +5,7 @@
 1. **Refactor for testability and modularity** ✅ **Done**
    - Split `src/js/app.js` into pure exported functions (`createDocDefinition`, worksheet parser, and generation coordinator) and a DOM bootstrap layer.
    - Ensure unit tests can import the functions directly.
+   - Branch note: completed in `codex/complete-first-task-from-tasks.md` and ready to merge into `main`.
 
 2. **Fix UI event wiring** ✅ **Done**
    - Remove inline `onclick` from HTML.
