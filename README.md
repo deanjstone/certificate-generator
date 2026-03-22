@@ -1,45 +1,52 @@
 # Certificate Generator
 
-This repo is a playground for me to test and adjust approaches with developing an Enterprise level software solution as a PWA.
+Generate a PDF certificate from learner data in an Excel spreadsheet (`.xlsx` or `.xls`).
 
 ## Prerequisites
 
-- Node.js (version 12 or higher)
-- npm (version 6 or higher)
+- Node.js 18+
+- npm 9+
+- Python 3 (for the local static server command)
 
-## Installation
+## Setup
 
-1. Clone the repository:
-   ```sh
-   git clone https://github.com/yourusername/certificate-generator.git
-   cd certificate-generator
-   ```
+```sh
+npm install
+```
 
-2. Install the dependencies:
-   ```sh
-   npm install
-   ```
+## Commands
+
+- Run tests:
+  ```sh
+  npm test
+  ```
+- Run static checks:
+  ```sh
+  npm run lint
+  ```
+- Start a local server:
+  ```sh
+  npm start
+  ```
+  Then open `http://localhost:3000`.
 
 ## Usage
 
-1. Start the development server:
-   ```sh
-   npm start
-   ```
-
-2. Open your browser and navigate to `http://localhost:3000`.
-
-3. Select an xlsx file containing the certificate data.
-
-4. Click the "Generate Certificate" button to generate and download the certificate as a PDF file.
+1. Open the app in a browser.
+2. Upload an `.xlsx` or `.xls` file where:
+   - `A1` contains the learner name.
+   - Rows `A2:B11` contain unit code and unit title pairs.
+3. Click **Generate Certificate**.
+4. Download `Certificate.pdf`.
 
 ## Project Structure
 
-- `src/js/app.js`: Contains the main JavaScript code for the certificate generator.
-- `src/css/style.css`: Contains the CSS styles for the certificate generator.
-- `src/html/index.html`: Contains the HTML structure for the certificate generator.
-- `tests/app.test.js`: Contains the unit tests for the functions in `app.js`.
+- `src/html/index.html` – primary HTML entrypoint for the app UI.
+- `src/js/app.js` – certificate generation logic + DOM bootstrap.
+- `src/css/style.css` – UI styles.
+- `tests/app.test.js` – Node-based automated tests.
+- `TASKS.md` – backlog and implementation status.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+MIT
