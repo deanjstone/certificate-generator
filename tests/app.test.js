@@ -1,91 +1,210 @@
-const { generateCertificate, createDocDefinition } = require('../src/js/app');
-const fs = require('fs');
-const path = require('path');
-const XLSX = require('xlsx');
+const test = require('node:test');
+const assert = require('node:assert/strict');
 
-describe('generateCertificate', () => {
-  let fileInput;
-  let loadingIndicator;
+const {
+  generateCertificate,
+  createDocDefinition,
+  parseWorksheet,
+  isSpreadsheetFile,
+} = require('../src/js/app');
 
-  beforeEach(() => {
-    document.body.innerHTML = `
-      <form id="form">
-        <input type="file" id="file" />
-        <div id="loading-indicator" style="display: none;"></div>
-      </form>
-    `;
-    fileInput = document.getElementById('file');
-    loadingIndicator = document.getElementById('loading-indicator');
+test('generateCertificate alerts if no file is selected', () => {
+  const alerts = [];
+  global.alert = (message) => alerts.push(message);
+
+  generateCertificate();
+
+  assert.deepEqual(alerts, ['Please select a file.']);
+});
+
+test('isSpreadsheetFile accepts xlsx extension and spreadsheet MIME types', () => {
+  assert.equal(isSpreadsheetFile({ name: 'students.xlsx', type: '' }), true);
+  assert.equal(isSpreadsheetFile({ name: 'students', type: 'application/vnd.ms-excel' }), true);
+  assert.equal(isSpreadsheetFile({ name: 'students', type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), true);
+  assert.equal(isSpreadsheetFile({ name: 'notes.txt', type: 'text/plain' }), false);
+});
+
+test('generateCertificate alerts when file selection is not a spreadsheet', () => {
+  const alerts = [];
+  global.alert = (message) => alerts.push(message);
+
+  generateCertificate({
+    file: new File(['bad'], 'bad.txt', { type: 'text/plain' }),
   });
 
-  it('should display an alert if no file is selected', () => {
-    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
-    generateCertificate();
-    expect(alertMock).toHaveBeenCalledWith('Please select a file.');
-    alertMock.mockRestore();
+  assert.deepEqual(alerts, ['Please select a valid .xlsx or .xls file.']);
+});
+
+test('generateCertificate calls loading callbacks and downloads PDF', () => {
+  const file = new File([''], 'test.xlsx', {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
 
-  it('should display a loading indicator while generating the certificate', (done) => {
-    const file = new File([''], 'test.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    fileInput.files = [file];
+  let loadingCalls = 0;
+  let loadedCalls = 0;
+  let downloadedAs = null;
 
-    const readerMock = jest.spyOn(FileReader.prototype, 'readAsArrayBuffer').mockImplementation(function() {
-      this.onload({ target: { result: new ArrayBuffer(8) } });
-    });
-
-    generateCertificate();
-
-    expect(loadingIndicator.style.display).toBe('block');
-
-    setTimeout(() => {
-      expect(loadingIndicator.style.display).toBe('none');
-      readerMock.mockRestore();
-      done();
-    }, 100);
+  generateCertificate({
+    file,
+    onLoading: () => {
+      loadingCalls += 1;
+    },
+    onLoaded: () => {
+      loadedCalls += 1;
+    },
+    fileReaderFactory: () => ({
+      readAsArrayBuffer() {
+        this.onload({ target: { result: new ArrayBuffer(8) } });
+      },
+    }),
+    xlsx: {
+      read: () => ({
+        SheetNames: ['Sheet1'],
+        Sheets: {
+          Sheet1: {
+            A1: { v: 'John Doe' },
+          },
+        },
+      }),
+    },
+    pdfMaker: {
+      createPdf: () => ({
+        download: (filename) => {
+          downloadedAs = filename;
+        },
+      }),
+    },
   });
 
-  it('should display an alert if there is an error reading the file', (done) => {
-    const file = new File([''], 'test.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    fileInput.files = [file];
+  assert.equal(loadingCalls, 1);
+  assert.equal(loadedCalls, 1);
+  assert.equal(downloadedAs, 'Certificate.pdf');
+});
 
-    const alertMock = jest.spyOn(window, 'alert').mockImplementation(() => {});
-    const readerMock = jest.spyOn(FileReader.prototype, 'readAsArrayBuffer').mockImplementation(function() {
-      this.onerror();
-    });
+test('generateCertificate alerts on file-read error', () => {
+  const file = new File([''], 'test.xlsx', {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  const alerts = [];
+  global.alert = (message) => alerts.push(message);
 
-    generateCertificate();
+  generateCertificate({
+    file,
+    fileReaderFactory: () => ({
+      readAsArrayBuffer() {
+        this.onerror();
+      },
+    }),
+  });
 
-    setTimeout(() => {
-      expect(alertMock).toHaveBeenCalledWith('Error reading file. Please try again.');
-      expect(loadingIndicator.style.display).toBe('none');
-      alertMock.mockRestore();
-      readerMock.mockRestore();
-      done();
-    }, 100);
+  assert.deepEqual(alerts, ['Error reading file. Please try again.']);
+});
+
+test('generateCertificate handles malformed workbook layout gracefully', () => {
+  const file = new File([''], 'test.xlsx', {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  const alerts = [];
+  global.alert = (message) => alerts.push(message);
+
+  generateCertificate({
+    file,
+    fileReaderFactory: () => ({
+      readAsArrayBuffer() {
+        this.onload({ target: { result: new ArrayBuffer(8) } });
+      },
+    }),
+    xlsx: {
+      read: () => ({
+        SheetNames: [],
+        Sheets: {},
+      }),
+    },
+    pdfMaker: {
+      createPdf: () => ({
+        download: () => {},
+      }),
+    },
+  });
+
+  assert.deepEqual(alerts, ['No worksheet found in uploaded file.']);
+});
+
+test('parseWorksheet maps workbook values into name and units and skips empty rows', () => {
+  const worksheet = {
+    A1: { v: '  John Doe ' },
+    A2: { v: 'UNIT1' },
+    B2: { v: 'Unit 1 Title' },
+    A4: { v: 'UNIT2' },
+    B4: { v: 'Unit 2 Title' },
+  };
+
+  const parsed = parseWorksheet(worksheet);
+
+  assert.deepEqual(parsed, {
+    name: 'John Doe',
+    units: [
+      { code: 'UNIT1', title: 'Unit 1 Title' },
+      { code: 'UNIT2', title: 'Unit 2 Title' },
+    ],
   });
 });
 
-describe('createDocDefinition', () => {
-  it('should create a document definition with the correct content', () => {
-    const name = 'John Doe';
-    const date = '01/01/2022';
-    const units = [
-      { code: 'UNIT1', title: 'Unit 1 Title' },
-      { code: 'UNIT2', title: 'Unit 2 Title' },
-    ];
+test('parseWorksheet throws for missing learner name in A1', () => {
+  assert.throws(
+    () => parseWorksheet({ A2: { v: 'UNIT1' }, B2: { v: 'Unit 1 Title' } }),
+    /Missing required learner name in cell A1/,
+  );
+});
 
-    const docDefinition = createDocDefinition(name, date, units);
-
-    expect(docDefinition).toEqual({
-      security: {
-        permissions: 'print',
-      },
-      content: expect.any(Array),
-    });
-
-    const content = docDefinition.content;
-    expect(content[0].text).toBe('CERTIFICATE IV IN TRAINING AND ASSESSMENT');
-    expect(content[2].text).toBe(name);
-    expect(content[content.length - 2].text).toBe(date);
+test('generateCertificate shows a user-facing error when A1 is missing', () => {
+  const file = new File([''], 'test.xlsx', {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
+  const alerts = [];
+  global.alert = (message) => alerts.push(message);
+
+  generateCertificate({
+    file,
+    fileReaderFactory: () => ({
+      readAsArrayBuffer() {
+        this.onload({ target: { result: new ArrayBuffer(8) } });
+      },
+    }),
+    xlsx: {
+      read: () => ({
+        SheetNames: ['Sheet1'],
+        Sheets: {
+          Sheet1: {
+            A2: { v: 'UNIT1' },
+            B2: { v: 'Unit 1 Title' },
+          },
+        },
+      }),
+    },
+    pdfMaker: {
+      createPdf: () => ({
+        download: () => {},
+      }),
+    },
+  });
+
+  assert.deepEqual(alerts, ['Missing required learner name in cell A1.']);
+});
+
+test('createDocDefinition builds expected structure', () => {
+  const name = 'John Doe';
+  const date = '01/01/2022';
+  const units = [
+    { code: 'UNIT1', title: 'Unit 1 Title' },
+    { code: 'UNIT2', title: 'Unit 2 Title' },
+  ];
+
+  const docDefinition = createDocDefinition(name, date, units);
+
+  assert.equal(docDefinition.security.permissions, 'print');
+  assert.ok(Array.isArray(docDefinition.content));
+  assert.equal(docDefinition.content[0].text, 'CERTIFICATE IV IN TRAINING AND ASSESSMENT');
+  assert.equal(docDefinition.content[2].text, name);
+  assert.equal(docDefinition.content[docDefinition.content.length - 2].text, date);
 });
