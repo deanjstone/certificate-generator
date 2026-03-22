@@ -130,7 +130,16 @@ function generateCertificate({
     try {
       const data = new Uint8Array(event.target.result);
       const workbook = xlsx.read(data, { type: "array" });
-      const worksheet = workbook?.Sheets?.[workbook?.SheetNames?.[0]];
+      const firstSheetName = workbook?.SheetNames?.[0];
+      const worksheet = workbook?.Sheets?.[firstSheetName];
+
+      if (!worksheet) {
+        throw new Error("No worksheet found in uploaded file.");
+      }
+      onLoaded();
+    }
+  };
+
       const { name, units } = parseWorksheet(worksheet);
       const date = dateFactory();
       const docDefinition = createDocDefinition(name, date, units);
@@ -140,6 +149,8 @@ function generateCertificate({
     } catch (error) {
       if (error?.message === "Missing required learner name in cell A1.") {
         onError("Missing required learner name in cell A1.");
+      } else if (error?.message === "No worksheet found in uploaded file.") {
+        onError("No worksheet found in uploaded file.");
       } else {
         onError("Error reading file. Please try again.");
       }

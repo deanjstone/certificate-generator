@@ -127,7 +127,7 @@ test('generateCertificate handles malformed workbook layout gracefully', () => {
     },
   });
 
-  assert.deepEqual(alerts, ['Missing required learner name in cell A1.']);
+  assert.deepEqual(alerts, ['No worksheet found in uploaded file.']);
 });
 
 test('parseWorksheet maps workbook values into name and units and skips empty rows', () => {
