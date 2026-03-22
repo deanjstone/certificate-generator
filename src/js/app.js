@@ -84,6 +84,21 @@ function parseWorksheet(worksheet) {
   return { name, units };
 }
 
+function isSpreadsheetFile(file) {
+  if (!file || typeof file !== "object") {
+    return false;
+  }
+
+  const lowerCaseName = String(file.name || "").toLowerCase();
+  const mimeType = String(file.type || "").toLowerCase();
+
+  const validExtension = lowerCaseName.endsWith(".xlsx") || lowerCaseName.endsWith(".xls");
+  const validMimeType =
+    mimeType.includes("spreadsheetml") || mimeType.includes("ms-excel");
+
+  return validExtension || validMimeType;
+}
+
 function generateCertificate({
   file,
   onLoading = () => {},
@@ -103,6 +118,11 @@ function generateCertificate({
     return;
   }
 
+  if (!isSpreadsheetFile(file)) {
+    onError("Please select a valid .xlsx or .xls file.");
+    return;
+  }
+
   onLoading();
   const reader = fileReaderFactory();
 
@@ -110,7 +130,7 @@ function generateCertificate({
     try {
       const data = new Uint8Array(event.target.result);
       const workbook = xlsx.read(data, { type: "array" });
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const worksheet = workbook?.Sheets?.[workbook?.SheetNames?.[0]];
       const { name, units } = parseWorksheet(worksheet);
       const date = dateFactory();
       const docDefinition = createDocDefinition(name, date, units);
@@ -138,25 +158,41 @@ function generateCertificate({
 function bootstrapCertificateGenerator() {
   const form = document.getElementById("form");
   const fileInput = document.getElementById("file");
+  const generateButton = document.getElementById("generate-button");
   const loadingIndicator = document.getElementById("loading-indicator");
+  const errorMessage = document.getElementById("error-message");
 
-  if (!form || !fileInput || !loadingIndicator) {
+  if (!form || !fileInput || !generateButton || !loadingIndicator || !errorMessage) {
     return;
   }
 
+  const setBusyState = (isBusy) => {
+    generateButton.disabled = isBusy;
+    loadingIndicator.hidden = !isBusy;
+    loadingIndicator.textContent = isBusy
+      ? "Generating certificate, please wait..."
+      : "";
+  };
+
+  const setError = (message) => {
+    errorMessage.hidden = !message;
+    errorMessage.textContent = message;
+  };
+
   form.addEventListener("submit", (event) => {
     event.preventDefault();
+    setError("");
 
     generateCertificate({
       file: fileInput.files[0],
       onLoading: () => {
-        loadingIndicator.style.display = "block";
+        setBusyState(true);
       },
       onLoaded: () => {
-        loadingIndicator.style.display = "none";
+        setBusyState(false);
       },
       onError: (message) => {
-        alert(message);
+        setError(message);
       },
     });
   });
@@ -172,5 +208,6 @@ if (typeof module !== "undefined") {
     parseWorksheet,
     generateCertificate,
     bootstrapCertificateGenerator,
+    isSpreadsheetFile,
   };
 }

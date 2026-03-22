@@ -5,6 +5,7 @@ const {
   generateCertificate,
   createDocDefinition,
   parseWorksheet,
+  isSpreadsheetFile,
 } = require('../src/js/app');
 
 test('generateCertificate alerts if no file is selected', () => {
@@ -14,6 +15,24 @@ test('generateCertificate alerts if no file is selected', () => {
   generateCertificate();
 
   assert.deepEqual(alerts, ['Please select a file.']);
+});
+
+test('isSpreadsheetFile accepts xlsx extension and spreadsheet MIME types', () => {
+  assert.equal(isSpreadsheetFile({ name: 'students.xlsx', type: '' }), true);
+  assert.equal(isSpreadsheetFile({ name: 'students', type: 'application/vnd.ms-excel' }), true);
+  assert.equal(isSpreadsheetFile({ name: 'students', type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), true);
+  assert.equal(isSpreadsheetFile({ name: 'notes.txt', type: 'text/plain' }), false);
+});
+
+test('generateCertificate alerts when file selection is not a spreadsheet', () => {
+  const alerts = [];
+  global.alert = (message) => alerts.push(message);
+
+  generateCertificate({
+    file: new File(['bad'], 'bad.txt', { type: 'text/plain' }),
+  });
+
+  assert.deepEqual(alerts, ['Please select a valid .xlsx or .xls file.']);
 });
 
 test('generateCertificate calls loading callbacks and downloads PDF', () => {
@@ -81,13 +100,43 @@ test('generateCertificate alerts on file-read error', () => {
   assert.deepEqual(alerts, ['Error reading file. Please try again.']);
 });
 
-test('parseWorksheet maps workbook values into name and units', () => {
+test('generateCertificate handles malformed workbook layout gracefully', () => {
+  const file = new File([''], 'test.xlsx', {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  const alerts = [];
+  global.alert = (message) => alerts.push(message);
+
+  generateCertificate({
+    file,
+    fileReaderFactory: () => ({
+      readAsArrayBuffer() {
+        this.onload({ target: { result: new ArrayBuffer(8) } });
+      },
+    }),
+    xlsx: {
+      read: () => ({
+        SheetNames: [],
+        Sheets: {},
+      }),
+    },
+    pdfMaker: {
+      createPdf: () => ({
+        download: () => {},
+      }),
+    },
+  });
+
+  assert.deepEqual(alerts, ['Missing required learner name in cell A1.']);
+});
+
+test('parseWorksheet maps workbook values into name and units and skips empty rows', () => {
   const worksheet = {
-    A1: { v: 'John Doe' },
+    A1: { v: '  John Doe ' },
     A2: { v: 'UNIT1' },
     B2: { v: 'Unit 1 Title' },
-    A3: { v: 'UNIT2' },
-    B3: { v: 'Unit 2 Title' },
+    A4: { v: 'UNIT2' },
+    B4: { v: 'Unit 2 Title' },
   };
 
   const parsed = parseWorksheet(worksheet);

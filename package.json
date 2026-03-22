@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "start": "python3 -m http.server 3000",
+    "lint": "node --check src/js/app.js tests/app.test.js",
     "test": "node --test tests/*.test.js"
   }
 }
