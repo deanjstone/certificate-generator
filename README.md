@@ -47,6 +47,22 @@ npm install
 - `tests/app.test.js` – Node-based automated tests.
 - `TASKS.md` – backlog and implementation status.
 
+## Deployment (GitHub Pages)
+
+Every push to the default branch triggers the GitHub Pages deployment workflow at `.github/workflows/deploy-pages.yml`.
+
+### One-time setup
+
+1. In your repository, go to **Settings → Pages**.
+2. Set **Source** to **GitHub Actions**.
+
+### Operational notes
+
+- To trigger a manual redeploy, run the deploy workflow with `workflow_dispatch` from the **Actions** tab.
+- View deployment logs in the relevant **Actions** workflow run and in the **Pages** environment details for that run.
+- For project pages, the expected site URL format is: `https://<org-or-user>.github.io/<repo>/`.
+- The root `index.html` is the published entrypoint, so maintainers should keep root-level static assets deployable.
+
 ## License
 
 MIT
