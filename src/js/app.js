@@ -30,9 +30,10 @@ function createDocDefinition(name, date, units) {
         margin: [0, 0, 0, 20],
       },
       {
-        ol: units.map((unit) => [
-          { text: `${unit.code} - ${unit.title}`, margin: [0, 5, 0, 5] },
-        ]),
+        ol: units.map((unit) => ({
+          text: `${unit.code} - ${unit.title}`,
+          margin: [0, 5, 0, 5],
+        })),
       },
       {
         text: "CERTIFICATE DETAILS",
