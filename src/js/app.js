@@ -30,9 +30,10 @@ function createDocDefinition(name, date, units) {
         margin: [0, 0, 0, 20],
       },
       {
-        ol: units.map((unit) => [
-          { text: `${unit.code} - ${unit.title}`, margin: [0, 5, 0, 5] },
-        ]),
+        ol: units.map((unit) => ({
+          text: `${unit.code} - ${unit.title}`,
+          margin: [0, 5, 0, 5],
+        })),
       },
       {
         text: "CERTIFICATE DETAILS",
@@ -136,10 +137,6 @@ function generateCertificate({
       if (!worksheet) {
         throw new Error("No worksheet found in uploaded file.");
       }
-      onLoaded();
-    }
-  };
-
       const { name, units } = parseWorksheet(worksheet);
       const date = dateFactory();
       const docDefinition = createDocDefinition(name, date, units);

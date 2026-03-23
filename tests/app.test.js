@@ -207,4 +207,12 @@ test('createDocDefinition builds expected structure', () => {
   assert.equal(docDefinition.content[0].text, 'CERTIFICATE IV IN TRAINING AND ASSESSMENT');
   assert.equal(docDefinition.content[2].text, name);
   assert.equal(docDefinition.content[docDefinition.content.length - 2].text, date);
+
+  const unitsListSection = docDefinition.content.find((section) => Array.isArray(section.ol));
+  assert.ok(unitsListSection);
+  assert.ok(unitsListSection.ol.every((item) => !Array.isArray(item)));
+  assert.deepEqual(unitsListSection.ol, [
+    { text: 'UNIT1 - Unit 1 Title', margin: [0, 5, 0, 5] },
+    { text: 'UNIT2 - Unit 2 Title', margin: [0, 5, 0, 5] },
+  ]);
 });
