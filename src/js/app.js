@@ -136,6 +136,9 @@ function generateCertificate({
       if (!worksheet) {
         throw new Error("No worksheet found in uploaded file.");
       }
+      onLoaded();
+    }
+  };
 
       const { name, units } = parseWorksheet(worksheet);
       const date = dateFactory();
