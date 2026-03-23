@@ -123,6 +123,16 @@ function generateCertificate({
     return;
   }
 
+  if (!xlsx || typeof xlsx.read !== "function") {
+    onError("Spreadsheet parser is unavailable. Please reload the page.");
+    return;
+  }
+
+  if (!pdfMaker || typeof pdfMaker.createPdf !== "function") {
+    onError("PDF generator is unavailable. Please reload the page.");
+    return;
+  }
+
   onLoading();
   const reader = fileReaderFactory();
 

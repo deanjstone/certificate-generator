@@ -35,6 +35,35 @@ test('generateCertificate alerts when file selection is not a spreadsheet', () =
   assert.deepEqual(alerts, ['Please select a valid .xlsx or .xls file.']);
 });
 
+test('generateCertificate alerts when spreadsheet parser is unavailable', () => {
+  const alerts = [];
+  global.alert = (message) => alerts.push(message);
+
+  generateCertificate({
+    file: new File([''], 'test.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    }),
+    xlsx: undefined,
+  });
+
+  assert.deepEqual(alerts, ['Spreadsheet parser is unavailable. Please reload the page.']);
+});
+
+test('generateCertificate alerts when PDF generator is unavailable', () => {
+  const alerts = [];
+  global.alert = (message) => alerts.push(message);
+
+  generateCertificate({
+    file: new File([''], 'test.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    }),
+    xlsx: { read: () => ({}) },
+    pdfMaker: undefined,
+  });
+
+  assert.deepEqual(alerts, ['PDF generator is unavailable. Please reload the page.']);
+});
+
 test('generateCertificate calls loading callbacks and downloads PDF', () => {
   const file = new File([''], 'test.xlsx', {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -95,6 +124,8 @@ test('generateCertificate alerts on file-read error', () => {
         this.onerror();
       },
     }),
+    xlsx: { read: () => ({}) },
+    pdfMaker: { createPdf: () => ({ download: () => {} }) },
   });
 
   assert.deepEqual(alerts, ['Error reading file. Please try again.']);
