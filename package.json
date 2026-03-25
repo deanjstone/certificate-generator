@@ -1,10 +1,18 @@
 {
   "name": "certificate-generator",
-  "version": "1.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "type": "module",
   "scripts": {
-    "start": "python3 -m http.server 3000",
-    "lint": "node --check src/js/app.js tests/app.test.js",
-    "test": "node --test tests/*.test.js"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test src/**/*.test.js"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0",
+    "open-props": "^1.7.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.0"
   }
 }
