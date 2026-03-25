@@ -1,4 +1,6 @@
-# Certificate Generator
+# Certificate Generator — version-alpha
+
+> **Note:** This branch (`version-alpha`) is a preserved copy of the project prior to redevelopment with AI assistance. It serves as a reference snapshot of the original codebase.
 
 Generate a PDF certificate from learner data in an Excel spreadsheet (`.xlsx` or `.xls`).
 
