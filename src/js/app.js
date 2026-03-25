@@ -173,12 +173,12 @@ function generateCertificate({
   reader.readAsArrayBuffer(file);
 }
 
-function bootstrapCertificateGenerator() {
-  const form = document.getElementById("form");
-  const fileInput = document.getElementById("file");
-  const generateButton = document.getElementById("generate-button");
-  const loadingIndicator = document.getElementById("loading-indicator");
-  const errorMessage = document.getElementById("error-message");
+function bootstrapCertificateGenerator(doc = document) {
+  const form = doc.getElementById("form");
+  const fileInput = doc.getElementById("file");
+  const generateButton = doc.getElementById("generate-button");
+  const loadingIndicator = doc.getElementById("loading-indicator");
+  const errorMessage = doc.getElementById("error-message");
 
   if (!form || !fileInput || !generateButton || !loadingIndicator || !errorMessage) {
     return;
