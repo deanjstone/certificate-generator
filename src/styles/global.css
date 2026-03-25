@@ -1,0 +1,15 @@
+/* Open Props — import only what you use */
+@import "open-props/style";       /* all custom properties */
+@import "open-props/normalize";   /* opinionated reset built on Open Props */
+
+/* Optionally cherry-pick:
+   @import "open-props/colors";
+   @import "open-props/sizes";
+   @import "open-props/typography";
+*/
+
+/* App tokens — override or extend Open Props here */
+:root {
+  --brand-hue: 220;
+  --brand: hsl(var(--brand-hue) 80% 50%);
+}
