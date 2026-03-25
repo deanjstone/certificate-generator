@@ -1,4 +1,4 @@
-# certgen — VET Certificate Generator
+# Certificate Generator — VET
 
 Generate, manage and issue VET (Vocational Education & Training) certificates.
 

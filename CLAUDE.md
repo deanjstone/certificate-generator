@@ -1,7 +1,7 @@
 # CLAUDE.md — AI Assistant Context
 
 ## Project
-**Name:** certgen — VET Certificate Generator
+**Name:** Certificate Generator — VET
 **Purpose:** Generate, manage and issue VET (Vocational Education & Training) certificates
 **Status:** Active development
 
@@ -67,11 +67,11 @@ Key decisions:
 ---
 
 ## Deployment
-- **Target:** GitHub Pages at `https://<org>.github.io/certgen/`
+- **Target:** GitHub Pages at `https://<org>.github.io/certificate-generator/`
 - **Trigger:** Push to `main` branch
 - **Secrets required:** `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
 - **Workflow:** `.github/workflows/deploy.yml`
-- Vite `base` is set to `/certgen/` — update if repo name differs
+- Vite `base` is set to `/certificate-generator/` — update if repo name differs
 
 ---
 

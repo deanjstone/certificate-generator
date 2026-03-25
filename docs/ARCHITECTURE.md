@@ -2,7 +2,7 @@
 
 ## Overview
 
-certgen is a browser-native single-page application with no server-side rendering.
+Certificate Generator is a browser-native single-page application with no server-side rendering.
 
 ## Data Flow
 
