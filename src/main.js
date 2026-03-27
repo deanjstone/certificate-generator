@@ -5,11 +5,19 @@ import { router } from './components/base/router.js';
 // Components — imported here so they are registered with customElements before
 // the router renders the first route. Add each component as it is built.
 // ---------------------------------------------------------------------------
-// import './components/layout/app-shell.js';
-// import './components/layout/app-nav.js';
-// import './components/layout/app-toast.js';
-// import './components/layout/app-modal.js';
-// import './components/display/cert-table.js';
+import './components/layout/app-shell.js';
+import './components/layout/app-nav.js';
+import './components/layout/app-toast.js';
+import './components/layout/app-modal.js';
+import './components/display/cert-table.js';
+import './components/display/cert-detail.js';
+import './components/display/cert-status-badge.js';
+import './components/display/verify-card.js';
+import './components/forms/cert-form.js';
+import './components/forms/import-form.js';
+import './components/forms/student-form.js';
+import './components/forms/settings-form.js';
+import './components/templates/cert-template.js';
 
 // ---------------------------------------------------------------------------
 // Route definitions

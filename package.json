@@ -13,6 +13,8 @@
     "open-props": "^1.7.0"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.0.0"
+    "@supabase/supabase-js": "^2.0.0",
+    "html2canvas": "^1.4.1",
+    "pdf-lib": "^1.17.1"
   }
 }
